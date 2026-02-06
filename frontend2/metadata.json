@@ -1,0 +1,9 @@
+{
+  "name": "QuiGo - AI Cognitive Verification Platform",
+  "description": "A high-fidelity AI-powered assessment platform for schools, students, and individuals to verify cognitive understanding through dynamic questioning.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "display-capture"
+  ]
+}

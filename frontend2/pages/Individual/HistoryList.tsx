@@ -90,6 +90,8 @@ const HistoryList: React.FC<HistoryListProps> = ({ onSelectAttempt }) => {
                                         <span>{attempt.num_questions} Questions</span>
                                         <span className="w-1 h-1 rounded-full bg-slate-300" />
                                         <span className="uppercase tracking-wide">{attempt.quiz_format}</span>
+                                        <span className="w-1 h-1 rounded-full bg-slate-300" />
+                                        <span className="text-blue-500 font-bold">{attempt.time_limit || 30}m</span>
                                     </div>
                                 </div>
                             </div>

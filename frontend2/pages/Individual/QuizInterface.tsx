@@ -23,6 +23,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, onBack }) => {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [result, setResult] = useState<any>(null);
+    const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
     useEffect(() => {
         startQuiz();
@@ -35,6 +36,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, onBack }) => {
             setQuizTopic(response.data.quiz_topic);
             setQuizFormat(response.data.quiz_format);
             setQuestions(response.data.questions);
+            if (response.data.time_limit) {
+                setTimeLeft(response.data.time_limit * 60);
+            }
         } catch (error) {
             console.error('Failed to start quiz:', error);
             alert('Failed to start quiz');
@@ -44,12 +48,33 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, onBack }) => {
         }
     };
 
+    useEffect(() => {
+        if (timeLeft === null || result) return;
+
+        if (timeLeft <= 0) {
+            handleSubmit(true);
+            return;
+        }
+
+        const timer = setInterval(() => {
+            setTimeLeft(prev => (prev !== null ? prev - 1 : null));
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [timeLeft, result]);
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
     const handleAnswerChange = (questionId: number, answer: string) => {
         setAnswers(prev => ({ ...prev, [questionId]: answer }));
     };
 
-    const handleSubmit = async () => {
-        if (Object.keys(answers).length < questions.length) {
+    const handleSubmit = async (isAuto = false) => {
+        if (!isAuto && Object.keys(answers).length < questions.length) {
             if (!window.confirm('You haven\'t answered all questions. Submit anyway?')) return;
         }
 
@@ -135,7 +160,15 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, onBack }) => {
                 </button>
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900">{quizTopic}</h1>
-                    <p className="text-sm text-slate-500 font-medium">{questions.length} Questions • <span className="capitalize">{quizFormat.replace('_', ' ')}</span></p>
+                    <div className="flex items-center gap-4 mt-1">
+                        <p className="text-sm text-slate-500 font-medium">{questions.length} Questions • <span className="capitalize">{quizFormat.replace('_', ' ')}</span></p>
+                        {timeLeft !== null && (
+                            <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border ${timeLeft < 60 ? 'bg-red-50 text-red-600 border-red-100 animate-pulse' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                                <Clock size={14} />
+                                <span>{formatTime(timeLeft)} remaining</span>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 

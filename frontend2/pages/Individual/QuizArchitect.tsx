@@ -34,6 +34,7 @@ const QuizArchitect: React.FC = () => {
     const [quizFormat, setQuizFormat] = useState('multiple_choice');
     const [difficulty, setDifficulty] = useState('medium');
     const [numQuestions, setNumQuestions] = useState(5);
+    const [timeLimit, setTimeLimit] = useState(30);
 
     // State
     const [isGenerating, setIsGenerating] = useState(false);
@@ -111,6 +112,7 @@ const QuizArchitect: React.FC = () => {
             formData.append('quiz_format', quizFormat);
             formData.append('difficulty', difficulty);
             formData.append('num_questions', numQuestions.toString());
+            formData.append('time_limit', timeLimit.toString());
 
             if (creationMode === 'topic') {
                 formData.append('topic', topic);
@@ -324,6 +326,20 @@ const QuizArchitect: React.FC = () => {
                                     <option value={20}>20 Questions</option>
                                 </select>
                             </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Time (Mins)</label>
+                                <select
+                                    value={timeLimit}
+                                    onChange={(e) => setTimeLimit(Number(e.target.value))}
+                                    className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                >
+                                    <option value={5}>5 Minutes</option>
+                                    <option value={10}>10 Minutes</option>
+                                    <option value={15}>15 Minutes</option>
+                                    <option value={20}>20 Minutes</option>
+                                    <option value={30}>30 Minutes</option>
+                                </select>
+                            </div>
                         </div>
 
                         <button
@@ -366,6 +382,8 @@ const QuizArchitect: React.FC = () => {
                                             <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-500">{quiz.num_questions} Qs</span>
                                             <span>•</span>
                                             <span className="capitalize">{quiz.difficulty}</span>
+                                            <span>•</span>
+                                            <span className="text-blue-500 font-bold">{quiz.time_limit || 30}m</span>
                                             <span>•</span>
                                             <span>{quiz.created_at}</span>
                                         </p>

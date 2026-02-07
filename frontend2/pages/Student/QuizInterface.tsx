@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ShieldAlert, AlertCircle, Camera, Monitor, Check, Loader2, X, Zap,
-    ArrowLeft, CheckCircle2, ChevronRight
+    ArrowLeft, CheckCircle2, ChevronRight, Clock
 } from 'lucide-react';
 import { GoogleGenAI, Modality } from '@google/genai';
 import { studentService } from '../../services/api';
@@ -37,6 +37,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quiz, onClose, onSuccess 
     const [loadingQuestions, setLoadingQuestions] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
     // Scroll lock for success modal
     useEffect(() => {
@@ -77,6 +78,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quiz, onClose, onSuccess 
 
                 const qData = await studentService.generateQuizQuestions(quiz.id, { api_key: apiKey });
                 setQuizQuestions(qData.questions);
+                if (quiz.time_limit) {
+                    setTimeLeft(quiz.time_limit * 60);
+                }
             } catch (err) {
                 console.error("Failed to load questions", err);
                 alert("Error loading quiz questions.");
@@ -88,6 +92,27 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quiz, onClose, onSuccess 
         };
         loadQuestions();
     }, [quiz.id]);
+
+    useEffect(() => {
+        if (timeLeft === null || proctoringStep !== 'active' || showSuccess) return;
+
+        if (timeLeft <= 0) {
+            handleSubmitQuiz(true);
+            return;
+        }
+
+        const timer = setInterval(() => {
+            setTimeLeft(prev => (prev !== null ? prev - 1 : null));
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [timeLeft, proctoringStep, showSuccess]);
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
 
     const requestPermissions = async () => {
         setPermError(null);
@@ -132,7 +157,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quiz, onClose, onSuccess 
     const isFinalQuestion = quizQuestions.length > 0 && currentQuestionIndex === quizQuestions.length - 1;
     const isSubmittingRef = useRef(false);
 
-    const handleSubmitQuiz = async () => {
+    const handleSubmitQuiz = async (isAuto = false) => {
+        if (!isAuto && Object.keys(answers).length < quizQuestions.length) {
+            if (!window.confirm('You haven\'t answered all questions. Submit anyway?')) return;
+        }
         if (isSubmittingRef.current) return;
         isSubmittingRef.current = true;
         setSubmitting(true);
@@ -216,6 +244,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quiz, onClose, onSuccess 
                         </div>
 
                         <div className="flex items-center space-x-4">
+                            {timeLeft !== null && (
+                                <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold border transition-all ${timeLeft < 60 ? 'bg-red-50 text-red-600 border-red-200 animate-pulse ring-4 ring-red-500/10' : 'bg-slate-50 text-slate-600 border-slate-100'}`}>
+                                    <Clock size={16} />
+                                    <span>{formatTime(timeLeft)}</span>
+                                </div>
+                            )}
                             <button onClick={onClose} className="p-3 text-slate-300 hover:text-red-500 transition-colors">
                                 <X size={24} />
                             </button>

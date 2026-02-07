@@ -25,6 +25,7 @@ const PrepareTest: React.FC<PrepareTestProps> = ({ classroom, onBack, students, 
         quizFormat: 'objective',
         numQuestions: 10,
         difficulty: 'medium',
+        timeLimit: 30,
     });
     const [file, setFile] = useState<File | null>(null);
     const [documents, setDocuments] = useState<any[]>([]);
@@ -68,6 +69,7 @@ const PrepareTest: React.FC<PrepareTestProps> = ({ classroom, onBack, students, 
             data.append('quiz_format', formData.quizFormat);
             data.append('num_questions', formData.numQuestions.toString());
             data.append('difficulty', formData.difficulty);
+            data.append('time_limit', formData.timeLimit.toString());
 
             if (activeTab === 'upload' && file) {
                 data.append('file', file);
@@ -262,6 +264,20 @@ const PrepareTest: React.FC<PrepareTestProps> = ({ classroom, onBack, students, 
                                             <option>GPT-4o Cognitive</option>
                                         </select>
                                     </div>
+                                    <div className="space-y-3">
+                                        <label className="text-[11px] font-black text-slate-800 uppercase tracking-widest">Time (Mins)</label>
+                                        <select
+                                            className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold text-slate-700 appearance-none"
+                                            value={formData.timeLimit}
+                                            onChange={e => setFormData({ ...formData, timeLimit: parseInt(e.target.value) })}
+                                        >
+                                            <option value={5}>5 Minutes</option>
+                                            <option value={10}>10 Minutes</option>
+                                            <option value={15}>15 Minutes</option>
+                                            <option value={20}>20 Minutes</option>
+                                            <option value={30}>30 Minutes</option>
+                                        </select>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-3">
@@ -305,6 +321,8 @@ const PrepareTest: React.FC<PrepareTestProps> = ({ classroom, onBack, students, 
                                                     <span className={quiz.difficulty === 'hard' ? 'text-red-500' : 'text-emerald-500'}>
                                                         {quiz.difficulty || 'medium'}
                                                     </span>
+                                                    <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                                                    <span className="text-blue-500">{quiz.time_limit || 30} MINS</span>
                                                 </div>
                                             </div>
                                             <div className="px-4 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-500">

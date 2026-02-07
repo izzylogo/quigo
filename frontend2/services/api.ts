@@ -23,13 +23,17 @@ api.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             console.warn("Unauthorized access - clearing session and redirecting");
+
+            // Clear all auth related storage
             localStorage.removeItem('quigo_token');
             localStorage.removeItem('quigo_role');
+            localStorage.removeItem('quigo_user');
 
             // Force a redirect to login if we're not already on a public page
             const currentPath = window.location.pathname;
             if (currentPath !== '/auth' && currentPath !== '/' && currentPath !== '/landing') {
-                window.location.href = '/auth';
+                // Use replace to avoid keeping the unauthorized page in history
+                window.location.replace('/auth');
             }
         }
         return Promise.reject(error);

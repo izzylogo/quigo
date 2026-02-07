@@ -81,6 +81,9 @@ const AssessmentList: React.FC<AssessmentListProps> = ({ quizzes, loading, analy
                                         <span className="px-2.5 py-1 bg-slate-50 text-slate-400 rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-100/50">
                                             {quiz.num_questions} Questions
                                         </span>
+                                        <span className="px-2.5 py-1 bg-blue-50 text-blue-500 rounded-lg text-[10px] font-black uppercase tracking-widest border border-blue-100/30">
+                                            {quiz.time_limit || 30} Minutes
+                                        </span>
                                     </div>
                                     <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-4 flex items-center gap-2">
                                         <ShieldAlert size={12} /> Due: {quiz.due_date}
@@ -138,6 +141,7 @@ const AssessmentList: React.FC<AssessmentListProps> = ({ quizzes, loading, analy
                                         <div className="flex items-center gap-2 mt-3 opacity-60">
                                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{quiz.quiz_format}</span>
                                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">• {quiz.num_questions} Questions</span>
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">• {quiz.time_limit || 30} Mins</span>
                                         </div>
                                     </div>
                                     <div className="mt-4">

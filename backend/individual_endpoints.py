@@ -74,6 +74,7 @@ def get_individual_quizzes(
             "quiz_format": q.quiz_format,
             "num_questions": q.num_questions,
             "difficulty": q.difficulty,
+            "time_limit": q.time_limit,
             "created_at": q.created_at
         }
         for q in quizzes
@@ -82,7 +83,13 @@ def get_individual_quizzes(
 # Create a new quiz
 @app.post("/api/individual/quizzes")
 async def create_individual_quiz(
-    req: QuizCreateRequest,
+    topic: str = Form(...),
+    quiz_format: str = Form("multiple_choice"),
+    num_questions: int = Form(5),
+    difficulty: str = Form("medium"),
+    time_limit: int = Form(88),
+    file: Optional[UploadFile] = File(None),
+    document_id: Optional[int] = Form(None),
     school_id: int = Depends(school_auth.get_current_school_id),
     db: Session = Depends(database.get_db)
 ):
@@ -90,18 +97,19 @@ async def create_individual_quiz(
     # Create quiz record
     new_quiz = models.Quiz(
         user_id=str(school_id),
-        topic=req.topic,
-        quiz_format=req.quiz_format,
-        num_questions=req.num_questions,
-        difficulty=req.difficulty
+        topic=topic,
+        quiz_format=quiz_format,
+        num_questions=num_questions,
+        difficulty=difficulty,
+        time_limit=time_limit
     )
     db.add(new_quiz)
     db.commit()
     db.refresh(new_quiz)
     
     # Generate questions using Gemini
-    prompt = generate_quiz_prompt(req.topic, req.quiz_format, req.num_questions, req.difficulty)
-    questions = await generate_quiz_questions(prompt, req.quiz_format, req.num_questions)
+    prompt = generate_quiz_prompt(topic, quiz_format, num_questions, difficulty)
+    questions = await generate_quiz_questions(prompt, quiz_format, num_questions)
     
     # Save questions
     for idx, q_data in enumerate(questions):
@@ -110,7 +118,7 @@ async def create_individual_quiz(
             text=q_data.get('question', ''),
             options=q_data.get('options'),
             correct_answer=q_data.get('correct_answer', ''),
-            question_type=req.quiz_format
+            question_type=quiz_format
         )
         db.add(question)
     
@@ -121,6 +129,7 @@ async def create_individual_quiz(
         "topic": new_quiz.topic,
         "quiz_format": new_quiz.quiz_format,
         "num_questions": new_quiz.num_questions,
+        "time_limit": new_quiz.time_limit,
         "created_at": new_quiz.created_at
     }
 
@@ -157,6 +166,7 @@ def start_individual_quiz(
     return {
         "attempt_id": attempt.id,
         "quiz_topic": quiz.topic,
+        "time_limit": quiz.time_limit,
         "questions": [
             {
                 "id": q.id,
@@ -243,6 +253,7 @@ def get_individual_attempts(
             "quiz_topic": a.quiz.topic if a.quiz else "Unknown",
             "quiz_format": a.quiz.quiz_format if a.quiz else "Unknown",
             "num_questions": a.quiz.num_questions if a.quiz else 0,
+            "time_limit": a.quiz.time_limit if a.quiz else 30,
             "score": a.score,
             "timestamp": a.timestamp
         }

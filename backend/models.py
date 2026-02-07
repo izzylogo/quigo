@@ -22,6 +22,7 @@ class Quiz(Base):
     quiz_format = Column(String) # 'objective', 'theory', 'fill_in_the_blank'
     num_questions = Column(Integer)
     difficulty = Column(String, default="medium")
+    time_limit = Column(Integer, default=30) # Time limit in minutes
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     user_id = Column(String, ForeignKey("users.id"))
 
@@ -140,6 +141,7 @@ class SchoolQuiz(Base):
     quiz_format = Column(String, nullable=False) # 'objective', 'theory', 'fill_in_the_blank'
     num_questions = Column(Integer, nullable=False)
     difficulty = Column(String, default="medium")
+    time_limit = Column(Integer, default=30) # Time limit in minutes
     questions = Column(JSON, nullable=True) # Store generated questions as JSON (Nullable for template quizzes)
     created_by = Column(String, nullable=True) # IT personnel name/identifier
     created_at = Column(DateTime, default=datetime.datetime.utcnow)

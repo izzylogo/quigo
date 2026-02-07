@@ -9,5 +9,8 @@ cryptography
 requests
 python-multipart
 bcrypt
-google-generativeai
+google-genai
 llama-parse
+nest-asyncio
+gunicorn
+psycopg2-binary

@@ -21,9 +21,10 @@ models.Base.metadata.create_all(bind=database.engine)
 
 # DEBUG: Print environment info
 import os
-print(f"DEBUG: STARTING APP")
-print(f"DEBUG: PORT env var: {os.environ.get('PORT')}")
-print(f"DEBUG: Current working directory: {os.getcwd()}")
+import sys
+print(f"DEBUG: STARTING APP", flush=True)
+print(f"DEBUG: PORT env var: {os.environ.get('PORT')}", flush=True)
+print(f"DEBUG: Current working directory: {os.getcwd()}", flush=True)
 
 app = FastAPI()
 

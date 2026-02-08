@@ -17,8 +17,13 @@ import re
 from education_systems import EDUCATION_SYSTEMS, get_available_countries, get_education_levels
 from credential_generator import generate_student_id, generate_password, generate_simple_password
 
-# Create Database Tables
 models.Base.metadata.create_all(bind=database.engine)
+
+# DEBUG: Print environment info
+import os
+print(f"DEBUG: STARTING APP")
+print(f"DEBUG: PORT env var: {os.environ.get('PORT')}")
+print(f"DEBUG: Current working directory: {os.getcwd()}")
 
 app = FastAPI()
 
@@ -43,6 +48,10 @@ async def validation_exception_handler(request, exc):
         status_code=422,
         content={"detail": exc.errors(), "body": str(exc)},
     )
+
+@app.get("/")
+def read_root():
+    return {"status": "ok", "message": "Quigo Backend Running"}
 
 # --- Pydantic Schemas ---
 

@@ -69,6 +69,10 @@ export const authService = {
         const response = await api.get('/api/school/list');
         return response.data;
     },
+    getStudentsList: async () => {
+        const response = await api.get('/api/students/list');
+        return response.data;
+    },
 };
 
 export const schoolService = {

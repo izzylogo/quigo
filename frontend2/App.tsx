@@ -5,7 +5,7 @@ import AuthPage from './pages/AuthPage';
 import SchoolPortal from './pages/SchoolPortal';
 import StudentPortal from './pages/StudentPortal';
 import IndividualPortal from './pages/IndividualPortal';
-import { useAuthPopup } from './components/AuthPopup';
+// import { useAuthPopup } from './components/AuthPopup';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const token = localStorage.getItem('quigo_token');
@@ -16,11 +16,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 const App: React.FC = () => {
-  const { AuthPopupComponent } = useAuthPopup();
+  // const { AuthPopupComponent } = useAuthPopup();
 
   return (
     <>
-      <AuthPopupComponent />
+      {/* <AuthPopupComponent /> */}
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />

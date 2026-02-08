@@ -22,6 +22,11 @@ const AuthPage: React.FC = () => {
   const [schools, setSchools] = useState<any[]>([]);
   const [showSchoolModal, setShowSchoolModal] = useState(false);
   const [loadingSchools, setLoadingSchools] = useState(false);
+  const [studentsData, setStudentsData] = useState<any[]>([]);
+  const [showStudentModal, setShowStudentModal] = useState(false);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [selectedSchoolTab, setSelectedSchoolTab] = useState(0);
+  const [selectedClassroomTab, setSelectedClassroomTab] = useState(0);
 
   useEffect(() => {
     if (!isLogin && (portal === 'school' || portal === 'individual')) {
@@ -72,6 +77,49 @@ const AuthPage: React.FC = () => {
         localStorage.setItem('quigo_token', token);
         localStorage.setItem('quigo_role', 'school');
         navigate('/school/classrooms');
+      } catch (err: any) {
+        setError(err.response?.data?.detail || 'Quick login failed.');
+      } finally {
+        setLoading(false);
+      }
+    }, 100);
+  };
+
+  const handlePreregisteredStudentLogin = async () => {
+    setLoadingStudents(true);
+    setShowStudentModal(true);
+    try {
+      const data = await authService.getStudentsList();
+      setStudentsData(data);
+      if (data.length > 0) {
+        setSelectedSchoolTab(0);
+        setSelectedClassroomTab(0);
+      }
+    } catch (err) {
+      console.error("Failed to fetch students", err);
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
+
+  const selectStudent = async (student: any) => {
+    setEmail(student.student_id);
+    setPassword(student.password);
+    setShowStudentModal(false);
+
+    // Auto-login after state update
+    setTimeout(async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const response = await authService.loginStudent({
+          student_id: student.student_id,
+          password: student.password
+        });
+        const token = response.access_token || response.token;
+        localStorage.setItem('quigo_token', token);
+        localStorage.setItem('quigo_role', 'student');
+        navigate('/student/assessments');
       } catch (err: any) {
         setError(err.response?.data?.detail || 'Quick login failed.');
       } finally {
@@ -132,7 +180,14 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col lg:flex-row font-outfit">
+    <div className="min-h-screen bg-white flex flex-col lg:flex-row font-outfit relative">
+      <button
+        onClick={() => navigate('/')}
+        className="lg:hidden absolute top-6 left-6 z-10 flex items-center space-x-2 text-slate-400 hover:text-blue-600 transition-all font-semibold"
+      >
+        <ArrowLeft size={18} />
+        <span className="text-sm">Home</span>
+      </button>
       {/* Left Decoration */}
       <div className="hidden lg:flex lg:w-1/2 bg-[#f9fafb] relative overflow-hidden items-center justify-center p-24 border-r border-slate-100">
         <div className="absolute inset-0 grid-pattern opacity-[0.4]" />
@@ -152,14 +207,14 @@ const AuthPage: React.FC = () => {
       </div>
 
       {/* Right Form */}
-      <div className="flex-1 flex items-center justify-center p-8 lg:p-24 bg-white relative">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md space-y-12">
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-8 lg:p-24 bg-white relative">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md space-y-8 md:space-y-12 pt-12 lg:pt-0">
           <div className="text-center space-y-4">
-            <h2 className="text-4xl lg:text-5xl font-display font-bold text-slate-900 leading-tight">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
-            <p className="text-slate-400 font-medium">Log in to your account</p>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold text-slate-900 leading-tight">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
+            <p className="hidden sm:block text-slate-400 font-medium">Log in to your account</p>
           </div>
 
-          <div className="flex p-1 bg-slate-50 rounded-full border border-slate-100 shadow-inner">
+          <div className="flex p-1 bg-slate-50 rounded-full border border-slate-100 shadow-inner overflow-x-auto no-scrollbar">
             {(['school', 'student', 'individual'] as PortalType[]).map((p) => (
               <button
                 key={p}
@@ -167,10 +222,10 @@ const AuthPage: React.FC = () => {
                   setPortal(p);
                   if (p === 'student') setIsLogin(true);
                 }}
-                className={`flex-1 py-4 rounded-full transition-all font-display font-bold text-[10px] uppercase tracking-widest ${portal === p ? 'bg-white text-blue-600 shadow-lg border border-slate-100' : 'text-slate-400 hover:text-slate-600'
+                className={`flex-1 py-3 sm:py-4 px-2 rounded-full transition-all font-display font-bold text-[9px] sm:text-[10px] uppercase tracking-widest whitespace-nowrap ${portal === p ? 'bg-white text-blue-600 shadow-lg border border-slate-100' : 'text-slate-400 hover:text-slate-600'
                   }`}
               >
-                {p === 'school' ? 'Teacher/School' : p === 'student' ? 'Student' : 'Individual'}
+                {p === 'school' ? 'School' : p === 'student' ? 'Student' : 'Individual'}
               </button>
             ))}
           </div>
@@ -195,8 +250,8 @@ const AuthPage: React.FC = () => {
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="John Doe"
-                      className="w-full bg-slate-50/50 border border-slate-100 rounded-3xl py-6 pl-14 pr-6 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 shadow-inner-sm outline-none transition-all text-slate-900 font-semibold"
+                      placeholder="Your Name"
+                      className="w-full bg-slate-50/50 border border-slate-100 rounded-3xl py-4 sm:py-6 pl-14 pr-6 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 shadow-inner-sm outline-none transition-all text-slate-900 font-semibold"
                     />
                   </div>
                 </div>
@@ -299,6 +354,17 @@ const AuthPage: React.FC = () => {
                 <span>Log into preregistered school</span>
               </button>
             )}
+
+            {portal === 'student' && isLogin && (
+              <button
+                type="button"
+                onClick={handlePreregisteredStudentLogin}
+                className="w-full bg-slate-50 text-slate-600 py-4 rounded-3xl font-display font-bold text-sm hover:bg-slate-100 transition-all border border-slate-200 flex items-center justify-center space-x-2"
+              >
+                <Database size={16} />
+                <span>View preregistered students</span>
+              </button>
+            )}
           </form>
 
           {portal !== 'student' && (
@@ -365,6 +431,119 @@ const AuthPage: React.FC = () => {
                   </div>
                 )}
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Preregistered Students Modal */}
+      <AnimatePresence>
+        {showStudentModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowStudentModal(false)}
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-3xl bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden max-h-[85vh] flex flex-col"
+            >
+              <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50 flex-shrink-0">
+                <div>
+                  <h3 className="text-2xl font-display font-bold text-slate-900">Preregistered Students</h3>
+                  <p className="text-sm text-slate-500 font-medium">Select a student to quick-login</p>
+                </div>
+                <button onClick={() => setShowStudentModal(false)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white transition-all text-slate-400">
+                  <ArrowLeft size={20} />
+                </button>
+              </div>
+
+              {loadingStudents ? (
+                <div className="py-20 flex flex-col items-center justify-center space-y-4">
+                  <Loader2 className="animate-spin text-blue-600" size={32} />
+                  <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Fetching students...</p>
+                </div>
+              ) : studentsData.length > 0 ? (
+                <div className="flex flex-col overflow-hidden flex-1">
+                  {/* School Tabs */}
+                  <div className="border-b border-slate-100 px-6 pt-4 flex-shrink-0">
+                    <div className="flex gap-2 overflow-x-auto">
+                      {studentsData.map((school, idx) => (
+                        <button
+                          key={school.id}
+                          onClick={() => {
+                            setSelectedSchoolTab(idx);
+                            setSelectedClassroomTab(0);
+                          }}
+                          className={`px-6 py-3 font-bold text-sm rounded-t-2xl transition-all whitespace-nowrap ${selectedSchoolTab === idx
+                            ? 'bg-white text-blue-600 border-t-2 border-x-2 border-blue-600'
+                            : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                            }`}
+                        >
+                          {school.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Classroom Tabs */}
+                  {studentsData[selectedSchoolTab]?.classrooms.length > 0 && (
+                    <div className="border-b border-slate-100 px-6 py-2 bg-slate-50/30 flex-shrink-0">
+                      <div className="flex gap-2 overflow-x-auto">
+                        {studentsData[selectedSchoolTab].classrooms.map((classroom: any, idx: number) => (
+                          <button
+                            key={classroom.id}
+                            onClick={() => setSelectedClassroomTab(idx)}
+                            className={`px-4 py-2 font-bold text-xs rounded-xl transition-all whitespace-nowrap ${selectedClassroomTab === idx
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-white text-slate-500 hover:text-slate-700 border border-slate-100'
+                              }`}
+                          >
+                            {classroom.name} ({classroom.students.length})
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Students List */}
+                  <div className="p-6 overflow-y-auto flex-1">
+                    <div className="space-y-3">
+                      {studentsData[selectedSchoolTab]?.classrooms[selectedClassroomTab]?.students.map((student: any) => (
+                        <button
+                          key={student.id}
+                          onClick={() => selectStudent(student)}
+                          className="w-full group p-5 rounded-2xl bg-slate-50 hover:bg-blue-600 transition-all border border-slate-100 hover:border-blue-500 text-left"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <p className="font-bold text-slate-900 group-hover:text-white transition-colors">{student.name}</p>
+                              <div className="flex gap-4 mt-1">
+                                <p className="text-sm text-slate-500 group-hover:text-blue-100 transition-colors">
+                                  <span className="font-bold">ID:</span> {student.student_id}
+                                </p>
+                                <p className="text-sm text-slate-500 group-hover:text-blue-100 transition-colors">
+                                  <span className="font-bold">Password:</span> {student.password}
+                                </p>
+                              </div>
+                            </div>
+                            <Zap size={20} className="text-slate-200 group-hover:text-white transition-colors" fill="currentColor" />
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="py-20 text-center">
+                  <p className="text-slate-400 font-medium">No preregistered students found.</p>
+                </div>
+              )}
             </motion.div>
           </div>
         )}
